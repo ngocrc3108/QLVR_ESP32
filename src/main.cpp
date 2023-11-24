@@ -49,14 +49,14 @@ void loop() {
 
 void wifiIndicator(void * parameters) {
 	while(1) {
-	if(WiFi.status() != WL_CONNECTED)
-		for(int i = 0; i < 5; i++) {
-		digitalWrite(BUILTIN_LED, !digitalRead(BUILTIN_LED));
-		vTaskDelay(200 / portTICK_PERIOD_MS);
+		if(WiFi.status() != WL_CONNECTED)
+			for(int i = 0; i < 5; i++) {
+			digitalWrite(BUILTIN_LED, !digitalRead(BUILTIN_LED));
+			vTaskDelay(200 / portTICK_PERIOD_MS);
+			}
+		else {
+			vTaskDelay(1000 / portTICK_PERIOD_MS);
+			digitalWrite(BUILTIN_LED, HIGH);
 		}
-	else {
-		vTaskDelay(1000 / portTICK_PERIOD_MS);
-		digitalWrite(BUILTIN_LED, HIGH);
-	}
 	}
 }
