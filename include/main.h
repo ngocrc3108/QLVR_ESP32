@@ -1,1 +1,1 @@
-void initWiFi();
+void wifiIndicator(void * parameters);
