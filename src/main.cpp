@@ -5,7 +5,7 @@
 
 #define CONNECT_TIME_OUT 10
 
-String webAppUrl = "https://htn-server.onrender.com/ESP32/read?";
+String webAppUrl = "https://htn-server.onrender.com/system/ESP32";
 WiFiManager wifiManager;
 
 void setup() {
@@ -33,7 +33,7 @@ void loop() {
 	// Serial.println(text);
 	// HTTPClient http;
 	// http.setConnectTimeout(5000);
-	// String tempUrl = webAppUrl + "id=ABCD";
+	// String tempUrl = webAppUrl + "/read?id=ABCD";
 	// http.begin(tempUrl);
 	// Serial.println("GET");
 	// int responseCode = http.GET();
