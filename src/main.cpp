@@ -25,26 +25,26 @@ void setup() {
 }
 
 void loop() {
-	// Serial.println("Here1");
-	// while(!Serial2.available());
-	//   Serial.println("Here2");
-	// Serial2.flush();
-	// String text = Serial2.readString();
-	// Serial.println(text);
-	// HTTPClient http;
-	// http.setConnectTimeout(5000);
-	// String tempUrl = webAppUrl + "/read?id=ABCD";
-	// http.begin(tempUrl);
-	// Serial.println("GET");
-	// int responseCode = http.GET();
-	// Serial.printf("response code: %d\n", responseCode);
-	// String data = http.getString();
-	// Serial.println(data);
-	// Serial2.print(data);
-	// http.end();
-	Serial.println("Hello world");
-	Serial.println(WiFi.status());
-	delay(5000);
+	Serial.println("Here1");
+	while(!Serial2.available());
+	  Serial.println("Here2");
+	Serial2.flush();
+	String query = Serial2.readString();
+	Serial.println(query);
+	HTTPClient http;
+	http.setConnectTimeout(5000);
+	String tempUrl = webAppUrl + "/read?secretKey=R1IC7I58XKKXPPAJXAGMGDJ3KWUI7U&" + query;
+	http.begin(tempUrl);
+	Serial.println("GET");
+	int responseCode = http.GET();
+	Serial.printf("response code: %d\n", responseCode);
+	String data = http.getString();
+	Serial.println(data);
+	Serial2.print(data);
+	http.end();
+	// Serial.println("Hello world");
+	// Serial.println(WiFi.status());
+	// delay(5000);
 }
 
 void wifiIndicator(void * parameters) {
