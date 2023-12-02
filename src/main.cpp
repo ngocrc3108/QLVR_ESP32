@@ -5,7 +5,7 @@
 
 #define CONNECT_TIME_OUT 10
 
-String webAppUrl = "https://htn-server.onrender.com/system/ESP32";
+String webAppUrl = "https://htn-server.onrender.com";
 WiFiManager wifiManager;
 
 void setup() {
@@ -14,7 +14,8 @@ void setup() {
 	pinMode(BUILTIN_LED, OUTPUT);
 	digitalWrite(BUILTIN_LED, LOW);
 
-	xTaskCreate(wifiIndicator, "wifiIndicator", 1000, NULL, 0, NULL);
+	xTaskCreate(wifiIndicator, "wifiIndicator", 1024, NULL, 0, NULL);
+	xTaskCreate(checkWriteRequest, "checkWriteRequest", 1024*5, NULL, 0, NULL);
 
 	// reset settings - wipe stored credentials for testing
 	// these are stored by the esp library
@@ -31,9 +32,21 @@ void loop() {
 	Serial2.flush();
 	String query = Serial2.readString();
 	Serial.println(query);
+
+	String path = "";
+
+	if(query.indexOf("cmd=read") == 0) {
+		path = "/system/ESP32/read";
+	} else if(query.indexOf("cmd=writeRes") == 0)
+		path = "/admin/ESP32/write";
+	else {
+		Serial.println("ignore");
+		return;
+	}
+
 	HTTPClient http;
 	http.setConnectTimeout(5000);
-	String tempUrl = webAppUrl + "/read?secretKey=R1IC7I58XKKXPPAJXAGMGDJ3KWUI7U&" + query;
+	String tempUrl = webAppUrl + path + "?secretKey=R1IC7I58XKKXPPAJXAGMGDJ3KWUI7U&" + query;
 	http.begin(tempUrl);
 	Serial.println("GET");
 	int responseCode = http.GET();
@@ -42,9 +55,10 @@ void loop() {
 	Serial.println(data);
 	Serial2.print(data);
 	http.end();
-	// Serial.println("Hello world");
-	// Serial.println(WiFi.status());
-	// delay(5000);
+}
+
+void readHandler() {
+	
 }
 
 void wifiIndicator(void * parameters) {
@@ -57,6 +71,26 @@ void wifiIndicator(void * parameters) {
 		else {
 			vTaskDelay(1000 / portTICK_PERIOD_MS);
 			digitalWrite(BUILTIN_LED, HIGH);
+		}
+	}
+}
+
+void checkWriteRequest(void * parameters) {
+	while(1) {
+		if(WiFi.status() == WL_CONNECTED) {
+		HTTPClient http;
+		http.setConnectTimeout(5000);
+		http.begin(webAppUrl + "/admin/ESP32/write?cmd=writeReq&secretKey=R1IC7I58XKKXPPAJXAGMGDJ3KWUI7U");
+		Serial.println("GET");
+		int responseCode = http.GET();
+		Serial.printf("response code: %d\n", responseCode);
+		String data = http.getString();
+
+		if(data.indexOf("cmd=write") != -1) 
+			Serial2.print(data);
+
+		Serial.println(data);
+		http.end();
 		}
 	}
 }
