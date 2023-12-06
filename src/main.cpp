@@ -8,6 +8,13 @@
 String webAppUrl = "https://htn-server.onrender.com";
 WiFiManager wifiManager;
 
+typedef enum {
+	READ,
+	WRITE
+} SMT_Command; 
+
+SMT_Command cmd;
+
 void setup() {
 	Serial.begin(115200);
 	Serial2.begin(115200);
@@ -28,7 +35,7 @@ void setup() {
 void loop() {
 	Serial.println("Here1");
 	while(!Serial2.available());
-	  Serial.println("Here2");
+	Serial.println("Here2");
 	Serial2.flush();
 	String query = Serial2.readString();
 	Serial.println(query);
@@ -36,9 +43,12 @@ void loop() {
 	String path = "";
 
 	if(query.indexOf("cmd=read") == 0) {
+		cmd = READ;
 		path = "/system/ESP32/read";
-	} else if(query.indexOf("cmd=writeRes") == 0)
+	} else if(query.indexOf("cmd=writeRes") == 0) {
+		cmd = WRITE;
 		path = "/admin/ESP32/write";
+	}
 	else {
 		Serial.println("ignore");
 		return;
@@ -52,8 +62,11 @@ void loop() {
 	int responseCode = http.GET();
 	Serial.printf("response code: %d\n", responseCode);
 	String data = http.getString();
+
+	if(cmd == READ) 
+		Serial2.print(data);
+
 	Serial.println(data);
-	Serial2.print(data);
 	http.end();
 }
 
@@ -61,12 +74,12 @@ void readHandler() {
 	
 }
 
-void wifiIndicator(void * parameters) {
+void wifiIndicator(void* parameters) {
 	while(1) {
 		if(WiFi.status() != WL_CONNECTED)
-			for(int i = 0; i < 5; i++) {
+			for(int i = 0; i < 10; i++) {
 			digitalWrite(BUILTIN_LED, !digitalRead(BUILTIN_LED));
-			vTaskDelay(200 / portTICK_PERIOD_MS);
+			vTaskDelay(100 / portTICK_PERIOD_MS);
 			}
 		else {
 			vTaskDelay(1000 / portTICK_PERIOD_MS);
@@ -75,7 +88,7 @@ void wifiIndicator(void * parameters) {
 	}
 }
 
-void checkWriteRequest(void * parameters) {
+void checkWriteRequest(void* parameters) {
 	while(1) {
 		if(WiFi.status() == WL_CONNECTED) {
 		HTTPClient http;
