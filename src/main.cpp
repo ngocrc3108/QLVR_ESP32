@@ -5,15 +5,16 @@
 
 #define CONNECT_TIME_OUT 10
 
-String webAppUrl = "https://htn-server.onrender.com";
-WiFiManager wifiManager;
-
 typedef enum {
 	READ,
 	WRITE
 } SMT_Command; 
 
 SMT_Command cmd;
+
+String webAppUrl = "https://htn-server.onrender.com";
+WiFiManager wifiManager;
+HTTPClient http;
 
 void setup() {
 	Serial.begin(115200);
@@ -30,6 +31,14 @@ void setup() {
 
 	wifiManager.setConnectTimeout(CONNECT_TIME_OUT);
 	wifiManager.autoConnect("ESP32", "31082003");
+
+    http.setReuse(true); // allow reuse (if server supports it)
+	http.setConnectTimeout(5000);
+
+	http.begin(webAppUrl);
+	http.GET();
+	Serial.println("handshake success");
+	http.end();
 }
 
 void loop() {
@@ -54,8 +63,6 @@ void loop() {
 		return;
 	}
 
-	HTTPClient http;
-	http.setConnectTimeout(5000);
 	String tempUrl = webAppUrl + path + "?secretKey=R1IC7I58XKKXPPAJXAGMGDJ3KWUI7U&" + query;
 	http.begin(tempUrl);
 	Serial.println("GET");
@@ -89,21 +96,24 @@ void wifiIndicator(void* parameters) {
 }
 
 void checkWriteRequest(void* parameters) {
+	HTTPClient httpCheckRequest;
+	httpCheckRequest.setConnectTimeout(5000);
+	httpCheckRequest.setReuse(true); // allow reuse (if server supports it)
 	while(1) {
-		if(WiFi.status() == WL_CONNECTED) {
-		HTTPClient http;
-		http.setConnectTimeout(5000);
-		http.begin(webAppUrl + "/admin/ESP32/write?cmd=writeReq&secretKey=R1IC7I58XKKXPPAJXAGMGDJ3KWUI7U");
-		Serial.println("GET");
-		int responseCode = http.GET();
-		Serial.printf("response code: %d\n", responseCode);
-		String data = http.getString();
+		if(WiFi.status() != WL_CONNECTED) 
+			continue;
 
-		if(data.indexOf("cmd=write") != -1) 
+		httpCheckRequest.begin(webAppUrl + "/admin/ESP32/write?cmd=writeReq&secretKey=R1IC7I58XKKXPPAJXAGMGDJ3KWUI7U");
+		// Serial.println("GET");
+		int responseCode = httpCheckRequest.GET();
+		// Serial.printf("response code: %d\n", responseCode);
+		String data = httpCheckRequest.getString();
+
+		if(data.indexOf("cmd=write") != -1) {
 			Serial2.print(data);
-
-		Serial.println(data);
-		http.end();
+			Serial.println(data);
 		}
+		
+		httpCheckRequest.end();
 	}
 }
